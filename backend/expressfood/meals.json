@@ -1,0 +1,61 @@
+[{
+  "nom": "Burger Classique",
+  "description": "Hamburger avec du boeuf, des tomates et de la sauce spéciale ",
+  "prix": "9.99",
+  "type": "plat"
+},{
+  "nom": "Poulet Tikka Masala",
+  "description": "Poulet grillé, sauce masala crémeuse avec du riz basmati",
+  "prix": "11.99",
+  "type": "plat"
+},{
+  "nom": "Pizza Margherita",
+  "description": "Sauce tomate, mozzarella et basilic",
+  "prix": "10.99",
+  "type": "plat"
+},{
+  "nom": "Salade César",
+  "description": "salade césar fraîche, poulet grillé, croûtons et sauce césar",
+  "prix": "8.49",
+  "type": "plat"
+},{
+  "nom": "Sushi Varié",
+  "description": "Assortiment de sushis variés :\nSaumon, thon et crevettes",
+  "prix": "12.99",
+  "type": "plat"
+},{
+  "nom": "Pâtes Alfredo",
+  "description": "Pâtes crémeuse à l'ail, parmesan et poulet grillé ",
+  "prix": "11.49",
+  "type": "plat"
+},{
+  "nom": "Tarte aux pommes",
+  "description": "Une délicieuse tarte aux pommes avec une touche de cannelle",
+  "prix": "4.99",
+  "type": "dessert"
+},{
+  "nom": "Crème Brûlée",
+  "description": "Une crème brûlée crémeuse avec une couche caramélisée croquante",
+  "prix": "6.49",
+  "type": "dessert"
+},{
+  "nom": " Gâteau au Chocolat Fondant",
+  "description": "Un délicieux gâteau au chocolat fondant garni de crème fouettée",
+  "prix": "5.99",
+  "type": "dessert"
+},{
+  "nom": "Cheesecake aux Fruits Rouges",
+  "description": "Un cheesecake crémeux garni de coulis de fruits rouges et de baies fraîches",
+  "prix": "6.49",
+  "type": "dessert"
+},{
+  "nom": "Tiramisu",
+  "description": "Un tiramisu classique avec des couches de biscuits imbibés de café et de mascarpone crémeux",
+  "prix": "4.99",
+  "type": "dessert"
+},{
+  "nom": "Panna Cotta à la Vanille",
+  "description": "Une panna cotta à la vanille onctueuse garnie de coulis de caramel",
+  "prix": "5.49",
+  "type": "dessert"
+}]
