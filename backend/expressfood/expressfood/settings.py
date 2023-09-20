@@ -11,13 +11,13 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-# import os
-# from dotenv import load_dotenv, find_dotenv
-# from pymongo import MongoClient
+import os
+from dotenv import load_dotenv, find_dotenv
+from pymongo import MongoClient
 
-# load_dotenv(find_dotenv())
+load_dotenv(find_dotenv())
 
-# password = os.getenv('MONDODB_PWD')
+password = os.getenv('MONDODB_PWD')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
