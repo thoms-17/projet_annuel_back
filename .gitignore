@@ -1,1 +1,7 @@
+# Ignore les fichiers .env
 .env
+
+# Ignore les fichiers JSON spécifiques
+meals.json
+order.json
+users.json

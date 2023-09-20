@@ -11,13 +11,13 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-import os
-from dotenv import load_dotenv, find_dotenv
-from pymongo import MongoClient
+# import os
+# from dotenv import load_dotenv, find_dotenv
+# from pymongo import MongoClient
 
-load_dotenv(find_dotenv())
+# load_dotenv(find_dotenv())
 
-password = os.getenv('MONDODB_PWD')
+# password = os.getenv('MONDODB_PWD')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -62,7 +62,7 @@ ROOT_URLCONF = "expressfood.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR,'expressfood/templates')],
+        "DIRS": [os.path.join(BASE_DIR, 'expressfood/templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -88,13 +88,13 @@ WSGI_APPLICATION = "expressfood.wsgi.application"
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.dummy',
-        'NAME': os.getenv('DB_NAME'),
-        'HOST': os.getenv('DB_HOST'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.dummy',
+#         'NAME': os.getenv('DB_NAME'),
+#         'HOST': os.getenv('DB_HOST'),
+#     }
+# }
 
 
 # Password validation
