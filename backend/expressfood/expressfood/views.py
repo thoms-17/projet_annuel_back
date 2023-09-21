@@ -80,30 +80,37 @@ def order(request):
 
 @csrf_exempt
 def register(request):
-    # On récupère les données envoyées par le client
-    data = request.POST
+    if request.method == 'POST':
+        try:
+            # Extrait les données JSON du corps de la requête
+            data = json.loads(request.body)
+            email = data.get('email', '')
 
-    # On vérifie que l'utilisateur n'existe pas déjà
-    users_collection = db_manager.get_users_collection()
+            # Vérifiez si l'utilisateur existe déjà
+            users_collection = db_manager.get_users_collection()
+            existing_user = users_collection.find_one({'email': email})
 
-    user = users_collection.find_one({'email': data['email']})
+            if existing_user:
+                return HttpResponse('L\'utilisateur existe déjà', status=400)
 
-    if user:
-        return HttpResponse('User already exists', status=400)
+            # Créez un nouvel utilisateur
+            new_user = {
+                'nom': data.get('nom', ''),
+                'prenom': data.get('prenom', ''),
+                'email': email,
+                'password': data.get('password', ''),
+                'adresse': data.get('adresse', ''),
+            }
 
-    # On crée l'utilisateur
-    user = {
-        'nom': data['nom'],
-        'prenom': data['prenom'],
-        'email': data['email'],
-        'password': data['password'],
-        'adresse': data['adresse'],
-    }
+            # Insérez l'utilisateur dans la base de données
+            users_collection.insert_one(new_user)
 
-    # On l'insère dans la base de données
-    users_collection.insert_one(user)
+            return HttpResponse('Utilisateur créé', status=201)
 
-    return HttpResponse('User created', status=201)
+        except json.JSONDecodeError:
+            return HttpResponse('Format JSON invalide', status=400)
+    else:
+        return HttpResponse('Requête invalide', status=405)
 
 @csrf_exempt
 def login(request):
@@ -118,8 +125,9 @@ def login(request):
             # Par exemple, recherchez l'utilisateur dans la base de données et comparez le mot de passe
 
             # Supposons que vous ayez une fonction pour vérifier l'authentification
-            if custom_authenticate(email, password):
-                return HttpResponse('Utilisateur connecté', status=200)
+            user_info = custom_authenticate(email, password)
+            if user_info:
+                return JsonResponse(user_info)  # Retourne les informations de l'utilisateur au format JSON
             else:
                 return HttpResponse('Mot de passe incorrect', status=401)
             
@@ -130,9 +138,7 @@ def login(request):
 
 def custom_authenticate(email, password):
     # Connexion à la base de données
-    client = MongoClient('mongodb+srv://expressfood:expressfood@cluster0.c8ywndp.mongodb.net')
-    db = client['expressfood']
-    users_collection = db['users']
+    users_collection = db_manager.get_users_collection()
 
     # Recherchez l'utilisateur par email
     user = users_collection.find_one({'email': email})
@@ -140,5 +146,24 @@ def custom_authenticate(email, password):
     if user:
         # Si l'utilisateur est trouvé, comparez les mots de passe
         if user['password'] == password:
-            return True  # Authentification réussie
-    return False  # Authentification échouée
+            # Authentification réussie, retournez les informations de l'utilisateur sous forme de JSON
+            user_info = {
+                'nom': user['nom'],
+                'prenom': user['prenom'],
+                'adresse': user['adresse'],
+                'role': user.get('role', '')  # Assurez-vous que votre modèle d'utilisateur inclut le champ 'role'
+            }
+            return user_info  # Retourne les informations de l'utilisateur
+    return None  # Authentification échouée
+
+def pending_orders(request):
+    # Connexion à la base de données MongoDB
+    order_collection = db_manager.get_order_collection()
+
+    # Recherche des commandes avec le statut "A livrer"
+    pending_orders = list(order_collection.find({'statut': 'A livrer'}))
+
+    # Convertir les données en JSON en utilisant json_util pour gérer les ObjectId
+    data = {'pending_orders': json_util.dumps(pending_orders)}
+
+    return JsonResponse(data, safe=False)
