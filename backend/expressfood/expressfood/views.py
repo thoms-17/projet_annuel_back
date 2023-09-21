@@ -1,11 +1,15 @@
 import random
 import os
+import json
 
+from django.views.decorators.csrf import csrf_exempt
 from pymongo import MongoClient
 from django.http import HttpResponse, JsonResponse
 from django.core.cache import cache
 from bson import json_util
 from dotenv import load_dotenv, find_dotenv
+
+load_dotenv()
 
 host = os.getenv('MONGODB_HOST')
 name = os.getenv('MONGODB_NAME')
@@ -74,6 +78,7 @@ def order(request):
     data = {'order': json_util.dumps(order_list)}
     return JsonResponse(data, safe=False)
 
+@csrf_exempt
 def register(request):
     # On récupère les données envoyées par le client
     data = request.POST
@@ -100,20 +105,40 @@ def register(request):
 
     return HttpResponse('User created', status=201)
 
+@csrf_exempt
 def login(request):
-    # On récupère les données envoyées par le client
-    data = request.POST
+    if request.method == 'POST':
+        try:
+            # Extrait les données JSON du corps de la requête
+            data = json.loads(request.body)
+            email = data.get('email', '')
+            password = data.get('password', '')
 
-    # On vérifie que l'utilisateur existe
-    users_collection = db_manager.get_users_collection()
+            # Vous pouvez maintenant utiliser email et password pour vérifier l'authentification
+            # Par exemple, recherchez l'utilisateur dans la base de données et comparez le mot de passe
 
-    user = users_collection.find_one({'email': data['email']})
+            # Supposons que vous ayez une fonction pour vérifier l'authentification
+            if custom_authenticate(email, password):
+                return HttpResponse('Utilisateur connecté', status=200)
+            else:
+                return HttpResponse('Mot de passe incorrect', status=401)
+            
+        except json.JSONDecodeError:
+            return HttpResponse('Format JSON invalide', status=400)
+    else:
+        return HttpResponse('Requête invalide', status=405)
 
-    if not user:
-        return HttpResponse('User not found', status=404)
+def custom_authenticate(email, password):
+    # Connexion à la base de données
+    client = MongoClient('mongodb+srv://expressfood:expressfood@cluster0.c8ywndp.mongodb.net')
+    db = client['expressfood']
+    users_collection = db['users']
 
-    # On vérifie que le mot de passe est correct
-    if user['password'] != data['password']:
-        return HttpResponse('Wrong password', status=400)
+    # Recherchez l'utilisateur par email
+    user = users_collection.find_one({'email': email})
 
-    return HttpResponse('User logged in', status=200)
+    if user:
+        # Si l'utilisateur est trouvé, comparez les mots de passe
+        if user['password'] == password:
+            return True  # Authentification réussie
+    return False  # Authentification échouée
