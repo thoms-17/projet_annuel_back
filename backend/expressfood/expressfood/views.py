@@ -84,11 +84,8 @@ def order(request):
     global current_order_number
 
     if request.method == 'GET':
-        
-        bdd = MongoClient('mongodb+srv://expressfood:expressfood@cluster0.c8ywndp.mongodb.net')
-        db = bdd['expressfood']
 
-        order_collection = db['commande']
+        order_collection = db_manager.get_order_collection()
         order_data = list(order_collection.find({}))
 
         order = []
@@ -99,8 +96,6 @@ def order(request):
                 'plat': order_item['plat'],
                 'adresse_livraison': order_item['adresse_livraison'],
             })
-
-        bdd.close()
         
         return JsonResponse({'order': order})
     
@@ -125,9 +120,6 @@ def order(request):
                 'prix': prix,
             })
 
-        bdd = MongoClient('mongodb+srv://expressfood:expressfood@cluster0.c8ywndp.mongodb.net')
-        db = bdd['expressfood']
-
         numero_commande = current_order_number
         heure_commande = datetime.now().isoformat()
 
@@ -140,7 +132,7 @@ def order(request):
             'nom_client': nom_client,
         }
 
-        order_collection = db['commande']
+        order_collection = db_manager.get_order_collection()
         result = order_collection.insert_one(new_order)
 
         response_data = {
@@ -148,8 +140,6 @@ def order(request):
             'message': 'Commande créée avec succès.'
         }
         current_order_number += 1
-
-        bdd.close()
 
         return JsonResponse(response_data, status=201)  
 
