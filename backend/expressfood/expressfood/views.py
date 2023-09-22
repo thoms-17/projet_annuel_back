@@ -15,6 +15,7 @@ load_dotenv()
 host = os.getenv('MONGODB_HOST')
 name = os.getenv('MONGODB_NAME')
 
+
 class DatabaseManager:
     def __init__(self):
         self.client = MongoClient(host)
@@ -29,14 +30,17 @@ class DatabaseManager:
     def get_order_collection(self):
         return self.db['commande']
 
+
 # Initialisez une seule instance de DatabaseManager
 db_manager = DatabaseManager()
+
 
 def users(request):
     users_collection = db_manager.get_users_collection()
     users_list = list(users_collection.find({}))
     data = {'users': json_util.dumps(users_list)}
     return JsonResponse(data, safe=False)
+
 
 def daily_meals(request):
     cached_data = cache.get('random_meals_data')
@@ -73,11 +77,13 @@ def daily_meals(request):
     cache.set('random_meals_data', data['random_meals'], 86400)
     return JsonResponse(data, safe=False)
 
+
 def all_order(request):
     order_collection = db_manager.get_order_collection()
     order_list = list(order_collection.find({}))
     data = {'order': json_util.dumps(order_list)}
     return JsonResponse(data, safe=False)
+
 
 @csrf_exempt
 def order(request):
@@ -96,9 +102,9 @@ def order(request):
                 'plat': order_item['plat'],
                 'adresse_livraison': order_item['adresse_livraison'],
             })
-        
+
         return JsonResponse({'order': order})
-    
+
     elif request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
 
@@ -112,8 +118,8 @@ def order(request):
         order_items = []
 
         for item in selected_items:
-            nom = item.get('nom', '')  
-            prix = item.get('prix', 0.0)  
+            nom = item.get('nom', '')
+            prix = item.get('prix', 0.0)
 
             order_items.append({
                 'nom': nom,
@@ -125,7 +131,7 @@ def order(request):
 
         new_order = {
             'numero_commande': numero_commande,
-            'plat': order_items, 
+            'plat': order_items,
             'adresse_livraison': adresse_livraison,
             'heure_commande': heure_commande,
             'statut': 'A livrer',
@@ -141,7 +147,7 @@ def order(request):
         }
         current_order_number += 1
 
-        return JsonResponse(response_data, status=201)  
+        return JsonResponse(response_data, status=201)
 
     return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
 
@@ -180,6 +186,7 @@ def register(request):
     else:
         return HttpResponse('Requête invalide', status=405)
 
+
 @csrf_exempt
 def login(request):
     if request.method == 'POST':
@@ -195,14 +202,16 @@ def login(request):
             # Supposons que vous ayez une fonction pour vérifier l'authentification
             user_info = custom_authenticate(email, password)
             if user_info:
-                return JsonResponse(user_info)  # Retourne les informations de l'utilisateur au format JSON
+                # Retourne les informations de l'utilisateur au format JSON
+                return JsonResponse(user_info)
             else:
                 return HttpResponse('Mot de passe incorrect', status=401)
-            
+
         except json.JSONDecodeError:
             return HttpResponse('Format JSON invalide', status=400)
     else:
         return HttpResponse('Requête invalide', status=405)
+
 
 def custom_authenticate(email, password):
     # Connexion à la base de données
@@ -219,10 +228,12 @@ def custom_authenticate(email, password):
                 'nom': user['nom'],
                 'prenom': user['prenom'],
                 'adresse': user['adresse'],
-                'role': user.get('role', '')  # Assurez-vous que votre modèle d'utilisateur inclut le champ 'role'
+                # Assurez-vous que votre modèle d'utilisateur inclut le champ 'role'
+                'role': user.get('role', '')
             }
             return user_info  # Retourne les informations de l'utilisateur
     return None  # Authentification échouée
+
 
 def pending_orders(request):
     # Connexion à la base de données MongoDB
@@ -236,22 +247,50 @@ def pending_orders(request):
 
     return JsonResponse(data, safe=False)
 
+
 def daily_special(request):
 
-   daily_special_collection = db_manager.get_meal_collection()
-   daily_special_data = list(daily_special_collection.find({}))
+    daily_special_collection = db_manager.get_meal_collection()
+    daily_special_data = list(daily_special_collection.find({}))
 
-   daily_special = []
+    daily_special = []
 
-   for meal_data in daily_special_data:
+    for meal_data in daily_special_data:
         meal_dict = {
             'nom': meal_data['nom'],
             'description': meal_data['description'],
-            'prix':float(str(meal_data['prix'].to_decimal())),  
+            'prix': float(str(meal_data['prix'].to_decimal())),
             'type': meal_data['type'],
         }
         daily_special.append(meal_dict)
 
-   return JsonResponse({'daily_special': daily_special})
+    return JsonResponse({'daily_special': daily_special})
+
 
 current_order_number = 1
+
+@csrf_exempt
+def prendre_en_charge(request):
+
+    try:
+        # Connexion à la base de données MongoDB
+        commandes_collection = db_manager.get_order_collection()
+
+        data = json.loads(request.body.decode('utf-8'))
+
+        numero_commande = data.get('numero_commande', '')
+
+    # Mettez à jour le statut de la commande en "En cours de livraison"
+        result = commandes_collection.update_one(
+            {'numero_commande': numero_commande},
+            {'$set': {'statut': 'En cours de livraison'}}
+        )
+
+        if result.modified_count > 0:
+         return JsonResponse({'message': 'Statut mis à jour avec succès'}, status=200)
+        else:
+            return JsonResponse({'message': 'Aucune commande trouvée avec ce numéro de commande'}, status=404)
+
+
+    except Exception as e:
+        return JsonResponse({'message': str(e)}, status=500)
