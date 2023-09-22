@@ -23,6 +23,8 @@ urlpatterns = [
     path("daily_meals/", views.daily_meals, name="daily_meals"),
     path("register/", views.register, name="register"),
     path("login/", views.login, name="login"),
+    path("all_order/", views.all_order, name="all_order"),
     path("order/", views.order, name="order"),
     path("pending_orders/", views.pending_orders, name="pending_orders"),
+    path("daily_special/", views.daily_special, name="daily_special"),
 ]

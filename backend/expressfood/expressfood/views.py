@@ -2,6 +2,7 @@ import random
 import os
 import json
 
+from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from pymongo import MongoClient
 from django.http import HttpResponse, JsonResponse
@@ -26,7 +27,7 @@ class DatabaseManager:
         return self.db['meals']
 
     def get_order_collection(self):
-        return self.db['order']
+        return self.db['commande']
 
 # Initialisez une seule instance de DatabaseManager
 db_manager = DatabaseManager()
@@ -72,11 +73,88 @@ def daily_meals(request):
     cache.set('random_meals_data', data['random_meals'], 86400)
     return JsonResponse(data, safe=False)
 
-def order(request):
+def all_order(request):
     order_collection = db_manager.get_order_collection()
     order_list = list(order_collection.find({}))
     data = {'order': json_util.dumps(order_list)}
     return JsonResponse(data, safe=False)
+
+@csrf_exempt
+def order(request):
+    global current_order_number
+
+    if request.method == 'GET':
+        
+        bdd = MongoClient('mongodb+srv://expressfood:expressfood@cluster0.c8ywndp.mongodb.net')
+        db = bdd['expressfood']
+
+        order_collection = db['commande']
+        order_data = list(order_collection.find({}))
+
+        order = []
+
+        for order_item in order_data:
+            order.append({
+                'numero_commande': order_item['numero_commande'],
+                'plat': order_item['plat'],
+                'adresse_livraison': order_item['adresse_livraison'],
+            })
+
+        bdd.close()
+        
+        return JsonResponse({'order': order})
+    
+    elif request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+
+        # Accédez à la clé 'selectedItems' dans le dictionnaire 'data'
+        selected_items = data.get('selectedItems', [])
+
+        # Accédez à 'adresse_livraison' dans le dictionnaire 'data' s'il existe
+        adresse_livraison = data.get('adresse_livraison', '')
+        nom_client = data.get('nom_client', '')
+
+        order_items = []
+
+        for item in selected_items:
+            nom = item.get('nom', '')  
+            prix = item.get('prix', 0.0)  
+
+            order_items.append({
+                'nom': nom,
+                'prix': prix,
+            })
+
+        bdd = MongoClient('mongodb+srv://expressfood:expressfood@cluster0.c8ywndp.mongodb.net')
+        db = bdd['expressfood']
+
+        numero_commande = current_order_number
+        heure_commande = datetime.now().isoformat()
+
+        new_order = {
+            'numero_commande': numero_commande,
+            'plat': order_items, 
+            'adresse_livraison': adresse_livraison,
+            'heure_commande': heure_commande,
+            'statut': 'A livrer',
+            'nom_client': nom_client,
+        }
+
+        order_collection = db['commande']
+        result = order_collection.insert_one(new_order)
+
+        response_data = {
+            'numero_commande': str(result.inserted_id),
+            'message': 'Commande créée avec succès.'
+        }
+        current_order_number += 1
+
+        bdd.close()
+
+        return JsonResponse(response_data, status=201)  
+
+    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+
 
 @csrf_exempt
 def register(request):
@@ -167,3 +245,23 @@ def pending_orders(request):
     data = {'pending_orders': json_util.dumps(pending_orders)}
 
     return JsonResponse(data, safe=False)
+
+def daily_special(request):
+
+   daily_special_collection = db_manager.get_meal_collection()
+   daily_special_data = list(daily_special_collection.find({}))
+
+   daily_special = []
+
+   for meal_data in daily_special_data:
+        meal_dict = {
+            'nom': meal_data['nom'],
+            'description': meal_data['description'],
+            'prix':float(str(meal_data['prix'].to_decimal())),  
+            'type': meal_data['type'],
+        }
+        daily_special.append(meal_dict)
+
+   return JsonResponse({'daily_special': daily_special})
+
+current_order_number = 1
