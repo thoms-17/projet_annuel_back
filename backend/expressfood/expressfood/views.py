@@ -108,10 +108,8 @@ def order(request):
     elif request.method == 'POST':
         data = json.loads(request.body.decode('utf-8'))
 
-        # Accédez à la clé 'selectedItems' dans le dictionnaire 'data'
         selected_items = data.get('selectedItems', [])
 
-        # Accédez à 'adresse_livraison' dans le dictionnaire 'data' s'il existe
         adresse_livraison = data.get('adresse_livraison', '')
         nom_client = data.get('nom_client', '')
 
@@ -196,13 +194,8 @@ def login(request):
             email = data.get('email', '')
             password = data.get('password', '')
 
-            # Vous pouvez maintenant utiliser email et password pour vérifier l'authentification
-            # Par exemple, recherchez l'utilisateur dans la base de données et comparez le mot de passe
-
-            # Supposons que vous ayez une fonction pour vérifier l'authentification
             user_info = custom_authenticate(email, password)
             if user_info:
-                # Retourne les informations de l'utilisateur au format JSON
                 return JsonResponse(user_info)
             else:
                 return HttpResponse('Mot de passe incorrect', status=401)
@@ -228,10 +221,9 @@ def custom_authenticate(email, password):
                 'nom': user['nom'],
                 'prenom': user['prenom'],
                 'adresse': user['adresse'],
-                # Assurez-vous que votre modèle d'utilisateur inclut le champ 'role'
                 'role': user.get('role', '')
             }
-            return user_info  # Retourne les informations de l'utilisateur
+            return user_info
     return None  # Authentification échouée
 
 
@@ -239,7 +231,6 @@ def pending_orders(request):
     # Connexion à la base de données MongoDB
     order_collection = db_manager.get_order_collection()
 
-    # Recherche des commandes avec le statut "A livrer"
     pending_orders = list(order_collection.find({'statut': 'A livrer'}))
 
     # Convertir les données en JSON en utilisant json_util pour gérer les ObjectId
@@ -280,10 +271,34 @@ def prendre_en_charge(request):
 
         numero_commande = data.get('numero_commande', '')
 
-    # Mettez à jour le statut de la commande en "En cours de livraison"
         result = commandes_collection.update_one(
             {'numero_commande': numero_commande},
             {'$set': {'statut': 'En cours de livraison'}}
+        )
+
+        if result.modified_count > 0:
+         return JsonResponse({'message': 'Statut mis à jour avec succès'}, status=200)
+        else:
+            return JsonResponse({'message': 'Aucune commande trouvée avec ce numéro de commande'}, status=404)
+
+
+    except Exception as e:
+        return JsonResponse({'message': str(e)}, status=500)
+    
+@csrf_exempt
+def livraison_terminee(request):
+
+    try:
+        # Connexion à la base de données MongoDB
+        commandes_collection = db_manager.get_order_collection()
+
+        data = json.loads(request.body.decode('utf-8'))
+
+        numero_commande = data.get('numero_commande', '')
+
+        result = commandes_collection.update_one(
+            {'numero_commande': numero_commande},
+            {'$set': {'statut': 'Livraison terminée'}}
         )
 
         if result.modified_count > 0:

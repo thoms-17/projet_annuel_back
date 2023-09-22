@@ -28,4 +28,5 @@ urlpatterns = [
     path("pending_orders/", views.pending_orders, name="pending_orders"),
     path("daily_special/", views.daily_special, name="daily_special"),
     path("prendre_en_charge/", views.prendre_en_charge, name="prendre_en_charge"),
+    path("livraison_terminee/", views.livraison_terminee, name="livraison_terminee"),
 ]
