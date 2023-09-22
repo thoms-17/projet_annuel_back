@@ -19,14 +19,22 @@ from . import views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("users/", views.users, name="users"),
-    path("daily_meals/", views.daily_meals, name="daily_meals"),
-    path("register/", views.register, name="register"),
+
+    #Gestion des utilisateurs
     path("login/", views.login, name="login"),
+    path("register/", views.register, name="register"),
+    path("users/", views.users, name="users"),
+
+    #Gestion de la carte
+    path("create_meal/", views.create_meal, name="create_meal"),
+    path("daily_meals/", views.daily_meals, name="daily_meals"),
+    path("daily_special/", views.daily_special, name="daily_special"),
+
+    #Gestion des commandes
     path("all_order/", views.all_order, name="all_order"),
     path("order/", views.order, name="order"),
     path("pending_orders/", views.pending_orders, name="pending_orders"),
-    path("daily_special/", views.daily_special, name="daily_special"),
     path("prendre_en_charge/", views.prendre_en_charge, name="prendre_en_charge"),
     path("livraison_terminee/", views.livraison_terminee, name="livraison_terminee"),
+    
 ]

@@ -250,7 +250,7 @@ def daily_special(request):
         meal_dict = {
             'nom': meal_data['nom'],
             'description': meal_data['description'],
-            'prix': float(str(meal_data['prix'].to_decimal())),
+            'prix': meal_data['prix'].to_decimal(),
             'type': meal_data['type'],
         }
         daily_special.append(meal_dict)
@@ -307,5 +307,38 @@ def livraison_terminee(request):
             return JsonResponse({'message': 'Aucune commande trouvée avec ce numéro de commande'}, status=404)
 
 
+    except Exception as e:
+        return JsonResponse({'message': str(e)}, status=500)
+
+@csrf_exempt
+def create_meal(request):
+    try:
+        # Accédez à la collection des plats dans MongoDB
+        meals_collection = db_manager.get_meal_collection()
+
+        # Récupérez les données du plat à partir de la requête POST
+        data = request.POST
+        print(data)
+        nom = data.get('nom', '')
+        description = data.get('description', '')
+        prix = data.get('prix', 0.0)
+        type = data.get('type', '')
+
+        # Créez un nouveau plat
+        nouveau_plat = {
+            'nom': nom,
+            'description': description,
+            'prix': prix,
+            'type': type
+        }
+
+        # Insérez le nouveau plat dans la collection des plats
+        result = meals_collection.insert_one(nouveau_plat)
+
+        if result.inserted_id:
+            return JsonResponse({'message': 'Plat créé avec succès'}, status=201)
+        else:
+            return JsonResponse({'message': 'Échec de la création du plat'}, status=500)
+    
     except Exception as e:
         return JsonResponse({'message': str(e)}, status=500)
